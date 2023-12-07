@@ -2,19 +2,27 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class HotelManagement extends JFrame {
 
     private List<Room> rooms;
+    private JButton dateButton; // 날짜 버튼
+    private int currentDateIndex = 0; // 현재 표시 중인 날짜의 인덱스
+    private List<String> recentDates; // 최근 5일의 날짜 목록
 
     public HotelManagement() {
         super("Hotel Management System");
         rooms = generateRoomData(); // 방 데이터 생성
+        recentDates = generateRecentDates(); // 최근 5일의 날짜 목록 생성
 
         // "Current Date" 버튼 생성 및 리스너 추가
-        JButton dateButton = new JButton("Current Date");
+        dateButton = new JButton(recentDates.get(currentDateIndex));
         dateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -47,15 +55,33 @@ public class HotelManagement extends JFrame {
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
+
+        // 타이머를 사용하여 주기적으로 날짜 업데이트
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateDate();
+            }
+        }, 0, 1000); // 1초마다 업데이트
     }
 
-    // 가상의 방 데이터 생성
-    private List<Room> generateRoomData() {
-        List<Room> rooms = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            rooms.add(new Room());
+    // 현재 날짜를 기준으로 최근 5일의 날짜를 생성
+    private List<String> generateRecentDates() {
+        List<String> dates = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        for (int i = 4; i >= 0; i--) {
+            dates.add(dateFormat.format(new Date(System.currentTimeMillis() - i * 24 * 60 * 60 * 1000)));
         }
-        return rooms;
+
+        return dates;
+    }
+
+    // 날짜 업데이트 메서드
+    private void updateDate() {
+        currentDateIndex = (currentDateIndex + 1) % recentDates.size(); // 다음 날짜로 업데이트
+        dateButton.setText(recentDates.get(currentDateIndex)); // 버튼에 새로운 날짜 설정
     }
 
     // "Current Date" 버튼 클릭 시 호출되는 메서드
@@ -94,7 +120,7 @@ public class HotelManagement extends JFrame {
 
         // 메인 패널 재생성
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(new JButton("Current Date"), BorderLayout.NORTH);
+        mainPanel.add(dateButton, BorderLayout.NORTH);
         mainPanel.add(roomPanel, BorderLayout.CENTER);
 
         // JFrame에 메인 패널 추가
@@ -102,14 +128,21 @@ public class HotelManagement extends JFrame {
         revalidate(); // 레이아웃 다시 계산
         repaint(); // 다시 그리기
     }
-
+    // 가상의 방 데이터 생성
+    private List<Room> generateRoomData() {
+        List<Room> rooms = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            rooms.add(new Room(i));
+        }
+        return rooms;
+    }
     // 방 클래스 정의
     private static class Room {
         private String roomNumber;
         private Color statusColor;
 
-        public Room() {
-            this.roomNumber = "Room " + roomNumber;
+        public Room(int roomIndex) {
+            this.roomNumber = "Room " + (roomIndex + 1); // 인덱스가 1부터 시작하도록 조정
             this.statusColor = Color.GREEN; // 초록색 (기본값: 공실)
         }
 
