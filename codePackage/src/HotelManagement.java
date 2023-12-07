@@ -12,7 +12,7 @@ import java.util.TimerTask;
 public class HotelManagement extends JFrame {
 
     private List<Room> rooms;
-    private JButton dateButton; // 날짜 버튼
+    private JButton[] dateButtons; // 날짜 버튼 배열
     private int currentDateIndex = 0; // 현재 표시 중인 날짜의 인덱스
     private List<String> recentDates; // 최근 5일의 날짜 목록
 
@@ -21,14 +21,26 @@ public class HotelManagement extends JFrame {
         rooms = generateRoomData(); // 방 데이터 생성
         recentDates = generateRecentDates(); // 최근 5일의 날짜 목록 생성
 
-        // "Current Date" 버튼 생성 및 리스너 추가
-        dateButton = new JButton(recentDates.get(currentDateIndex));
-        dateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateRoomStatus(); // 날짜 버튼 클릭 시 방 상태 업데이트
-            }
-        });
+        // 날짜 버튼 배열 초기화 (5개로 수정)
+        dateButtons = new JButton[5];
+        for (int i = 0; i < 5; i++) {
+            dateButtons[i] = new JButton(recentDates.get(i));
+            final int buttonIndex = i;
+            dateButtons[i].addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    currentDateIndex = buttonIndex;
+                    updateRoomStatus(); // 선택된 버튼에 해당하는 날짜로 방 상태 업데이트
+                }
+            });
+        }
+
+
+        // 메인 패널 생성 및 구성
+        JPanel mainPanel = new JPanel(new FlowLayout());
+        for (JButton dateButton : dateButtons) {
+            mainPanel.add(dateButton);
+        }
 
         // 방 버튼을 표시할 패널 생성
         JPanel roomPanel = new JPanel(new GridLayout(4, 5, 10, 10));
@@ -44,17 +56,14 @@ public class HotelManagement extends JFrame {
             roomPanel.add(roomButton);
         }
 
-        // 메인 패널 생성 및 구성
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(dateButton, BorderLayout.NORTH);
         mainPanel.add(roomPanel, BorderLayout.CENTER);
 
         // JFrame에 메인 패널 추가
         getContentPane().add(mainPanel);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // 타이머를 사용하여 주기적으로 날짜 업데이트
         Timer timer = new Timer();
@@ -81,8 +90,11 @@ public class HotelManagement extends JFrame {
     // 날짜 업데이트 메서드
     private void updateDate() {
         currentDateIndex = (currentDateIndex + 1) % recentDates.size(); // 다음 날짜로 업데이트
-        dateButton.setText(recentDates.get(currentDateIndex)); // 버튼에 새로운 날짜 설정
+        for (int i = 0; i < dateButtons.length; i++) {
+            dateButtons[i].setText(recentDates.get((currentDateIndex + i) % recentDates.size()));
+        }
     }
+
 
     // "Current Date" 버튼 클릭 시 호출되는 메서드
     private void updateRoomStatus() {
@@ -104,6 +116,12 @@ public class HotelManagement extends JFrame {
         revalidate(); // 레이아웃 다시 계산
         repaint(); // 다시 그리기
 
+        // 메인 패널 재생성
+        JPanel mainPanel = new JPanel(new FlowLayout());
+        for (JButton dateButton : dateButtons) {
+            mainPanel.add(dateButton);
+        }
+
         // 방 버튼을 표시할 패널 재생성
         JPanel roomPanel = new JPanel(new GridLayout(4, 5, 10, 10));
         for (Room room : rooms) {
@@ -118,16 +136,17 @@ public class HotelManagement extends JFrame {
             roomPanel.add(roomButton);
         }
 
-        // 메인 패널 재생성
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(dateButton, BorderLayout.NORTH);
         mainPanel.add(roomPanel, BorderLayout.CENTER);
 
         // JFrame에 메인 패널 추가
         getContentPane().add(mainPanel);
-        revalidate(); // 레이아웃 다시 계산
-        repaint(); // 다시 그리기
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
     }
+
     // 가상의 방 데이터 생성
     private List<Room> generateRoomData() {
         List<Room> rooms = new ArrayList<>();
@@ -136,6 +155,7 @@ public class HotelManagement extends JFrame {
         }
         return rooms;
     }
+
     // 방 클래스 정의
     private static class Room {
         private String roomNumber;
@@ -156,11 +176,11 @@ public class HotelManagement extends JFrame {
 
         public String getStatus() {
             if (statusColor.equals(Color.GREEN)) {
-                return "Available";
+                return "공실";
             } else if (statusColor.equals(Color.BLUE)) {
-                return "Reserved";
+                return "예약 상태";
             } else if (statusColor.equals(Color.RED)) {
-                return "Occupied";
+                return "투숙 상태";
             }
             return "";
         }
