@@ -3,7 +3,7 @@ import java.awt.*;
 
 public class Part1 extends JFrame {
     Part1(){
-        super("창2"); //타이틀
+        super("객실설정, 고객정보"); //타이틀
         JPanel jPanel = new JPanel();
 
         jPanel.setBackground(Color.BLUE);

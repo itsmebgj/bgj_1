@@ -3,12 +3,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class Dinae extends JFrame {
-    public Dinae() {
+public class TransPan extends JFrame {
+    public TransPan() {
 
-        super("창1"); //타이틀
+        super("메인스크린"); //타이틀
         JPanel jPanel = new JPanel();
-        JButton btn1 = new JButton("창 2");
+        JButton btn1 = new JButton("객실설정, 고객정보");
         setSize(300, 200); //창 크기 설정
         jPanel.add(btn1);
         add(jPanel);
@@ -31,6 +31,6 @@ public class Dinae extends JFrame {
     }
 
     public static void main(String[] args) {
-        new Dinae();
+        new TransPan();
     }
 }
