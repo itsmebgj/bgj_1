@@ -12,7 +12,8 @@ import java.util.TimerTask;
 public class HotelManagement extends JFrame {
 
     private List<Room> rooms;
-    private JButton[] dateButtons; // 날짜 버튼 배열
+    private JButton dateButton; // 날짜 버튼
+    private JPanel roomPanel; // 방 버튼을 표시할 패널
     private int currentDateIndex = 0; // 현재 표시 중인 날짜의 인덱스
     private List<String> recentDates; // 최근 5일의 날짜 목록
 
@@ -21,29 +22,17 @@ public class HotelManagement extends JFrame {
         rooms = generateRoomData(); // 방 데이터 생성
         recentDates = generateRecentDates(); // 최근 5일의 날짜 목록 생성
 
-        // 날짜 버튼 배열 초기화 (5개로 수정)
-        dateButtons = new JButton[5];
-        for (int i = 0; i < 5; i++) {
-            dateButtons[i] = new JButton(recentDates.get(i));
-            final int buttonIndex = i;
-            dateButtons[i].addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    currentDateIndex = buttonIndex;
-                    updateRoomStatus(); // 선택된 버튼에 해당하는 날짜로 방 상태 업데이트
-                }
-            });
-        }
-
-
-        // 메인 패널 생성 및 구성
-        JPanel mainPanel = new JPanel(new FlowLayout());
-        for (JButton dateButton : dateButtons) {
-            mainPanel.add(dateButton);
-        }
+        // 날짜 버튼 초기화
+        dateButton = new JButton(recentDates.get(currentDateIndex));
+        dateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateRoomStatus(); // 선택된 버튼에 해당하는 날짜로 방 상태 업데이트
+            }
+        });
 
         // 방 버튼을 표시할 패널 생성
-        JPanel roomPanel = new JPanel(new GridLayout(4, 5, 10, 10));
+        roomPanel = new JPanel(new GridLayout(4, 5, 10, 10));
         for (Room room : rooms) {
             JButton roomButton = new JButton(room.getRoomNumber());
             roomButton.setBackground(room.getStatusColor());
@@ -56,6 +45,9 @@ public class HotelManagement extends JFrame {
             roomPanel.add(roomButton);
         }
 
+        // 메인 패널 생성 및 구성
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(dateButton, BorderLayout.NORTH);
         mainPanel.add(roomPanel, BorderLayout.CENTER);
 
         // JFrame에 메인 패널 추가
@@ -78,7 +70,7 @@ public class HotelManagement extends JFrame {
     // 현재 날짜를 기준으로 최근 5일의 날짜를 생성
     private List<String> generateRecentDates() {
         List<String> dates = new ArrayList<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         for (int i = 4; i >= 0; i--) {
             dates.add(dateFormat.format(new Date(System.currentTimeMillis() - i * 24 * 60 * 60 * 1000)));
@@ -90,11 +82,8 @@ public class HotelManagement extends JFrame {
     // 날짜 업데이트 메서드
     private void updateDate() {
         currentDateIndex = (currentDateIndex + 1) % recentDates.size(); // 다음 날짜로 업데이트
-        for (int i = 0; i < dateButtons.length; i++) {
-            dateButtons[i].setText(recentDates.get((currentDateIndex + i) % recentDates.size()));
-        }
+        dateButton.setText(recentDates.get(currentDateIndex));
     }
-
 
     // "Current Date" 버튼 클릭 시 호출되는 메서드
     private void updateRoomStatus() {
@@ -112,39 +101,15 @@ public class HotelManagement extends JFrame {
 
     // UI 갱신 메서드
     private void refreshUI() {
-        getContentPane().removeAll(); // 모든 컴포넌트 제거
-        revalidate(); // 레이아웃 다시 계산
-        repaint(); // 다시 그리기
-
-        // 메인 패널 재생성
-        JPanel mainPanel = new JPanel(new FlowLayout());
-        for (JButton dateButton : dateButtons) {
-            mainPanel.add(dateButton);
-        }
-
-        // 방 버튼을 표시할 패널 재생성
-        JPanel roomPanel = new JPanel(new GridLayout(4, 5, 10, 10));
-        for (Room room : rooms) {
-            JButton roomButton = new JButton(room.getRoomNumber());
-            roomButton.setBackground(room.getStatusColor());
-            roomButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    showRoomDetails(room);
+        for (Component component : roomPanel.getComponents()) {
+            if (component instanceof JButton) {
+                JButton roomButton = (JButton) component;
+                Room room = findRoomByNumber(roomButton.getText());
+                if (room != null) {
+                    roomButton.setBackground(room.getStatusColor());
                 }
-            });
-            roomPanel.add(roomButton);
+            }
         }
-
-        mainPanel.add(roomPanel, BorderLayout.CENTER);
-
-        // JFrame에 메인 패널 추가
-        getContentPane().add(mainPanel);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     }
 
     // 가상의 방 데이터 생성
@@ -154,6 +119,16 @@ public class HotelManagement extends JFrame {
             rooms.add(new Room(i));
         }
         return rooms;
+    }
+
+    // 방 번호로 방 객체 찾기
+    private Room findRoomByNumber(String roomNumber) {
+        for (Room room : rooms) {
+            if (room.getRoomNumber().equals(roomNumber)) {
+                return room;
+            }
+        }
+        return null;
     }
 
     // 방 클래스 정의
